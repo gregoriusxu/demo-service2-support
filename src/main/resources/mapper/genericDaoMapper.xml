@@ -32,6 +32,16 @@
 		</foreach>
  	</select>
  	<!-- 装载模型 -->
+ 	<select id="load" resultType="java.util.Map">
+ 		SELECT * FROM ${param1} 
+ 		<foreach collection="param2" item="item" index="index" open="WHERE" separator="AND">
+			${item.key} IN 
+			<foreach collection="item.value" item="id" index="index" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+		</foreach>
+ 		
+ 	</select>
  	<select id="find" resultType="java.util.Map">
  		SELECT * FROM ${param1} 
  		<foreach collection="param2" item="item" index="index" open="WHERE" separator="AND">

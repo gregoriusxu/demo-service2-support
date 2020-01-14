@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Component;
 
 import com.demo2.support.dao.BasicDao;
 import com.demo2.support.dao.impl.factory.Property;
@@ -29,6 +30,7 @@ import com.demo2.support.utils.DateUtils;
  * The implement of BasicDao with Jdbc.
  * @author fangang
  */
+@Component
 public class BasicDaoJdbcImpl implements BasicDao {
 	@Autowired
 	private GenericDao dao;

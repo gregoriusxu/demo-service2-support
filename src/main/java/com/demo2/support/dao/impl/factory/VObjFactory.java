@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -18,6 +19,7 @@ import com.demo2.support.xml.XmlBuildFactoryTemplate;
  * The factory that get the configure of the value objects.
  * @author fangang
  */
+@Component
 public class VObjFactory extends XmlBuildFactoryTemplate {
 	private static Map<String, VObj> vObjMap = new HashMap<>();
 	@Value("vObjFile")

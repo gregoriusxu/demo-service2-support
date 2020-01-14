@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.demo2.support.dao.BasicDao;
 import com.demo2.support.dao.impl.factory.Join;
 import com.demo2.support.dao.impl.factory.VObj;
@@ -18,6 +20,7 @@ import com.demo2.support.utils.BeanUtils;
  * The generic DDD repository for all of the services in the system.
  * @author fangang
  */
+@Component
 public class Repository implements BasicDao {
 	private BasicDao dao;
 	
