@@ -10,6 +10,7 @@ import java.util.Date;
 
 import org.junit.Test;
 
+import com.demo2.support.entity.Entity;
 import com.demo2.support.utils.DateUtils;
 
 /**
@@ -27,9 +28,17 @@ public class EntityTest {
 	 */
 	@Test
 	public void testEqualsObject() {
-		Person actual = new Person(1,"John",DateUtils.getDate("2020-01-01 00:00:00"),3);
-		Person excepted =  new Person(1,"John",DateUtils.getDate("2020-01-01 00:00:00"),3);
+		Person actual = new Person(1,"John",DateUtils.getDate("2020-01-01 00:00:00","YYYY-MM-DD hh:mm:ss"),3);
+		Person excepted =  new Person(1,"John",DateUtils.getDate("2020-01-01 00:00:00","YYYY-MM-DD hh:mm:ss"),3);
 		actual.equals(excepted);
+		assertThat(actual, equalTo(excepted));
+	}
+	
+	@Test
+	public void testToString() {
+		Person person = new Person(1,"John",DateUtils.getDate("2020-01-01 00:00:00","YYYY-MM-DD hh:mm:ss"),3);
+		String actual = person.toString();
+		String excepted = "{id:1, name:John, birthday:Sun Dec 29 00:00:00 CST 2019, children:3}";
 		assertThat(actual, equalTo(excepted));
 	}
 

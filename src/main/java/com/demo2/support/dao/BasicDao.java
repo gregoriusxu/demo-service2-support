@@ -15,36 +15,36 @@ import com.demo2.support.entity.Entity;
  */
 public interface BasicDao {
 	/**
-	 * insert a value object into table.
-	 * @param vo
+	 * insert an entity into table.
+	 * @param entity
 	 */
-	public <T> void insert(T vo);
+	public <T> void insert(T entity);
 	/**
-	 * update a value object.
-	 * @param vo
+	 * update an entity.
+	 * @param entity
 	 */
-	public <T> void update(T vo);
+	public <T> void update(T entity);
 	/**
 	 * if not exists, then insert, else update.
-	 * @param vo
+	 * @param entity
 	 */
-	public <T> void insertOrUpdate(T vo);
+	public <T> void insertOrUpdate(T entity);
 	/**
 	 * insert a list of value objects, and if exists, then update.
 	 * @param list
 	 */
 	public <T, S extends Collection<T>> void insertOrUpdateForList(S list);
 	/**
-	 * delete a value object.
-	 * note: you must load the value object first or do like this: 
+	 * delete an entity.
+	 * note: you must load the entity first or do like this: 
 	 * <pre>
 	 * User user = new User();
 	 * user.setId("C0001");
 	 * dao.delete(user);
 	 * </pre>
-	 * @param vo
+	 * @param entity
 	 */
-	public <T> void delete(T vo);
+	public <T> void delete(T entity);
 	/**
 	 * delete a list of value objects.
 	 * @param list
@@ -54,7 +54,7 @@ public interface BasicDao {
 	 * @param ids
 	 * @param template
 	 */
-	public <S extends Serializable, T extends Entity<S>> void deleteForList(List<S> ids, T template);
+	public <S extends Serializable, T extends Entity<S>> void deleteForList(Collection<S> ids, T template);
 	/**
 	 * load an entity by id.
 	 * @param id
@@ -68,7 +68,7 @@ public interface BasicDao {
 	 * @param template just an empty object to know which class
 	 * @return list of entity
 	 */
-	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(List<S> ids, T template);
+	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(Collection<S> ids, T template);
 	/**
 	 * load all entities according to a condition, which the condition come from the template. 
 	 * for example: I want to load all of the items of an order, then the template is the orderItem 

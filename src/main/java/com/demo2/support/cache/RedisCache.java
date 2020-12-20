@@ -5,6 +5,7 @@ package com.demo2.support.cache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,21 +29,21 @@ public class RedisCache implements BasicCache {
 	private RedisTemplate<String, Object> redisTemplate;
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> void set(T vo) {
-		if(vo==null) return;
-		String key = generateKey(vo, vo.getId());
-		log.debug("set a value object to cache: {key: "+key+", value: "+vo+"}");
-		redisTemplate.opsForValue().set(key, vo);
+	public <S extends Serializable, T extends Entity<S>> void set(T entity) {
+		if(entity==null) return;
+		String key = generateKey(entity, entity.getId());
+		log.debug("set a value object to cache: {key: "+key+", value: "+entity+"}");
+		redisTemplate.opsForValue().set(key, entity);
 	}
 
 	@Override
 	public <S extends Serializable, T extends Entity<S>> T get(S id, T template) {
 		if(id==null||template==null) return null;
 		String key = generateKey(template, id);
-		Object vo = redisTemplate.opsForValue().get(key);
-		if(vo==null) return null;
-		log.debug("get a value object from cache: {key: "+key+", value: "+vo+"}");
-		return object2Entity(vo, template);
+		Object entity = redisTemplate.opsForValue().get(key);
+		if(entity==null) return null;
+		log.debug("get a value object from cache: {key: "+key+", value: "+entity+"}");
+		return object2Entity(entity, template);
 	}
 
 	@Override
@@ -54,19 +55,19 @@ public class RedisCache implements BasicCache {
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> void setForList(List<T> vos) {
-		if(vos==null||vos.isEmpty()) return;
+	public <S extends Serializable, T extends Entity<S>> void setForList(Collection<T> entities) {
+		if(entities==null||entities.isEmpty()) return;
 		Map<String, Entity<S>> map = new HashMap<>();
-		for(Entity<S> vo : vos) {
-			String key = generateKey(vo, vo.getId());
-			map.put(key, vo);
+		for(Entity<S> entity : entities) {
+			String key = generateKey(entity, entity.getId());
+			map.put(key, entity);
 		}
-		log.debug("set a list of value objects to cache: {values: "+vos+"}");
+		log.debug("set a list of value objects to cache: {values: "+entities+"}");
 		redisTemplate.opsForValue().multiSet(map);
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> getForList(List<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> List<T> getForList(Collection<S> ids, T template) {
 		if(ids==null||template==null) return null;
 		List<String> keys = new ArrayList<>();
 		for(S id : ids) {
@@ -75,17 +76,17 @@ public class RedisCache implements BasicCache {
 		}
 		List<Object> values = redisTemplate.opsForValue().multiGet(keys);
 		if(values==null) return null;
-		List<T> vos = new ArrayList<>();
+		List<T> entities = new ArrayList<>();
 		for(Object value : values) {
-			T vo = object2Entity(value, template);
-			vos.add(vo);
+			T entity = object2Entity(value, template);
+			entities.add(entity);
 		}
-		log.debug("get a list of value objects from cache: {keys: "+keys+", values: "+vos+"}");
-		return vos;
+		log.debug("get a list of value objects from cache: {keys: "+keys+", values: "+entities+"}");
+		return entities;
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> void deleteForList(List<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> void deleteForList(Collection<S> ids, T template) {
 		if(ids==null||template==null) return;
 		List<String> keys = new ArrayList<>();
 		for(S id : ids) {
@@ -110,12 +111,12 @@ public class RedisCache implements BasicCache {
 	}
 	
 	/**
-	 * @param vo the value object
+	 * @param entity the value object
 	 * @param id
 	 * @return generate the key with a certain rule.
 	 */
-	private <S extends Serializable, T extends Entity<S>> String generateKey(T vo, S id) {
-		String clazz = vo.getClass().getName();
+	private <S extends Serializable, T extends Entity<S>> String generateKey(T entity, S id) {
+		String clazz = entity.getClass().getName();
 		return clazz + SPLITTER + id;
 	}
 }

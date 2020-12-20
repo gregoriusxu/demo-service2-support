@@ -5,6 +5,7 @@ package com.demo2.support.repository;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,9 +17,9 @@ import com.demo2.support.entity.Entity;
 
 /**
  * The DDD repository using cache: 
- * 1) if load a value object, load from cache first.
+ * 1) if load an entity, load from cache first.
  * 2) if not in the cache, set to cache after query from database.
- * 3) if update or delete a value object, delete from cache.
+ * 3) if update or delete an entity, delete from cache.
  * @author fangang
  */
 public class RepositoryWithCache extends Repository implements BasicDao {
@@ -40,84 +41,85 @@ public class RepositoryWithCache extends Repository implements BasicDao {
 
 	@Override
 	public <S extends Serializable, T extends Entity<S>> T load(S id, T template) {
-		T vo = cache.get(id, template);
-		if(vo!=null) return vo;
-		vo = super.load(id, template);
-		cache.set(vo);
-		return vo;
+		T entity = cache.get(id, template);
+		if(entity!=null) return entity;
+		entity = super.load(id, template);
+		cache.set(entity);
+		return entity;
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(List<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(Collection<S> ids, T template) {
 		if(ids==null||template==null) return null;
 		
-		List<T> vos = cache.getForList(ids, template);
-		List<S> otherIds = getIdsNotInCache(ids, vos);
-		if(otherIds.isEmpty()) return vos; //cache get all of the value objects.
+		Collection<T> entities = cache.getForList(ids, template);
+		List<S> otherIds = getIdsNotInCache(ids, entities);
+		if(otherIds.isEmpty()) return (List<T>)entities; //cache get all of the entities.
 		
 		List<T> list = super.loadForList(otherIds, template);
 		
-		if(otherIds.size()==ids.size()) return list; //all of the value objects query for database.
-		return fillOtherVosIn(ids, vos, list); //fill the value objects query for db in the list of value objects get in cache.
+		if(otherIds.size()==ids.size()) return list; //all of the entities query for database.
+		return (List<T>)fillOtherEntitiesIn(ids, entities, list); //fill the entity query for db in the list of entities get in cache.
 	}
 	
 	/**
 	 * @param ids
-	 * @param vos
+	 * @param entities
 	 * @return all of the id not in cache
 	 */
-	private <S extends Serializable, T extends Entity<S>> List<S> getIdsNotInCache(List<S> ids, List<T> vos) {
+	private <S extends Serializable, T extends Entity<S>> List<S> getIdsNotInCache(Collection<S> ids, Collection<T> entities) {
 		List<S> otherIds = new ArrayList<>();
-		Iterator<T> vo = vos.iterator();
+		Iterator<T> entity = entities.iterator();
 		Iterator<S> id = ids.iterator();
-		while(vo.hasNext()&&id.hasNext()) {
-			if(vo.next()==null) otherIds.add(id.next());
+		while(entity.hasNext()&&id.hasNext()) {
+			if(entity.next()==null) otherIds.add(id.next());
 		}
 		return otherIds;
 	}
 	
 	/**
-	 * fill the value objects, which load from other source, in the list of value objects load from cache.
+	 * fill the entities, which load from other source, in the list of entities load from cache.
 	 * @param ids
-	 * @param vos the list of vos load from cache
-	 * @param otherVos the other vos load from other source
-	 * @return the list of value objects
+	 * @param entities the list of entities load from cache
+	 * @param otherEntities the other entities load from other source
+	 * @return the list of entities
 	 */
-	private <S extends Serializable, T extends Entity<S>> List<T> fillOtherVosIn(List<S> ids, List<T> vos, List<T> otherVos) {
+	private <S extends Serializable, T extends Entity<S>> 
+			Collection<T> fillOtherEntitiesIn(Collection<S> ids, Collection<T> entities, Collection<T> otherEntities) {
 		Map<S,T> map = new HashMap<>();
-		for(T value : otherVos) {
+		for(T value : otherEntities) {
 			map.put(value.getId(), value);
 		}
 		
-		Iterator<T> voIter = vos.iterator();
+		Iterator<T> voIter = entities.iterator();
 		Iterator<S> idIter = ids.iterator();
 		while(voIter.hasNext()&&idIter.hasNext()) {
-			T vo = voIter.next();
-			if(vo!=null) continue;
-			vo = map.get(idIter.next());
+			T entity = voIter.next();
+			if(entity!=null) continue;
+			entity = map.get(idIter.next());
 		}
-		return vos;
+		return entities;
 	}
 
 	@Override
-	public <T> void update(T vo) {
-		super.update(vo);
-		if(vo instanceof Entity) 
-			deleteCache((Entity<?>) vo);
+	public <T> void update(T entity) {
+		super.update(entity);
+		if(entity instanceof Entity) 
+			deleteCache((Entity<?>) entity);
 	}
 
 	/**
-	 * @param vo the value object
+	 * @param entity the entity
 	 */
-	private <S extends Serializable, T extends Entity<S>> void deleteCache(T vo) {
-		cache.delete(vo.getId(), vo);
+	private <S extends Serializable, T extends Entity<S>> void deleteCache(T entity) {
+		cache.delete(entity.getId(), entity);
 	}
 
 	@Override
-	public <T> void insertOrUpdate(T vo) {
-		super.insertOrUpdate(vo);
-		if(vo instanceof Entity) 
-			deleteCache((Entity<?>) vo);
+	public <T> void insertOrUpdate(T entity) {
+		super.insertOrUpdate(entity);
+		if(entity instanceof Entity) 
+			deleteCache((Entity<?>) entity);
 	}
 
 	@Override
@@ -127,14 +129,14 @@ public class RepositoryWithCache extends Repository implements BasicDao {
 	}
 
 	@Override
-	public <T> void delete(T vo) {
-		super.delete(vo);
-		if(vo instanceof Entity) 
-			deleteCache((Entity<?>) vo);
+	public <T> void delete(T entity) {
+		super.delete(entity);
+		if(entity instanceof Entity) 
+			deleteCache((Entity<?>) entity);
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> void deleteForList(List<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> void deleteForList(Collection<S> ids, T template) {
 		super.deleteForList(ids, template);
 		cache.deleteForList(ids, template);
 	}

@@ -4,7 +4,7 @@
 package com.demo2.support.cache;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
 
 import com.demo2.support.entity.Entity;
 
@@ -32,16 +32,16 @@ public interface BasicCache {
 	/**
 	 * @param vos the list of value objects.
 	 */
-	public <S extends Serializable, T extends Entity<S>> void setForList(List<T> vos);
+	public <S extends Serializable, T extends Entity<S>> void setForList(Collection<T> vos);
 	/**
 	 * @param ids the list of id
 	 * @param template
 	 * @return the list of value objects
 	 */
-	public <S extends Serializable, T extends Entity<S>> List<T> getForList(List<S> ids, T template);
+	public <S extends Serializable, T extends Entity<S>> Collection<T> getForList(Collection<S> ids, T template);
 	/**
 	 * @param ids the list of id
 	 * @param template
 	 */
-	public <S extends Serializable, T extends Entity<S>> void deleteForList(List<S> ids, T template);
+	public <S extends Serializable, T extends Entity<S>> void deleteForList(Collection<S> ids, T template);
 }

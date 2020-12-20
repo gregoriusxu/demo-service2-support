@@ -6,7 +6,11 @@ package com.demo2.support.repository;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -20,35 +24,32 @@ import com.demo2.support.utils.BeanUtils;
 /**
  * @author fangang
  */
-public class ReferenceFactory <S extends Serializable> {
+public class ReferenceFactoryForList <S extends Serializable, T extends Entity<S>> {
 	private Ref ref;
-	private Entity<S> entity;
+	private Collection<T> entities;
 	private ApplicationContext context = null;
 	
-	public ReferenceFactory(ApplicationContext context) {
+	public ReferenceFactoryForList(ApplicationContext context) {
 		this.context = context;
 	}
 	
 	/**
-	 * @param ref
-	 * @param entity
+	 * @param ref the information of reference.
+	 * @param entities
 	 */
-	public void build(Ref ref, Entity<S> entity) {
+	public void build(Ref ref, Collection<T> entities) {
 		this.ref = ref;
-		this.entity = entity;
+		this.entities = entities;
 		
 		String refType = ref.getRefType();
 		if("oneToOne".equals(refType)) {
-			Object value = loadOfOneToOne(ref);
-			setValueOfRefToEntity(value);
+			loadOfOneToOne(ref);
 		}
 		if("manyToOne".equals(refType)) {
-			Object value = loadOfManyToOne(ref);
-			setValueOfRefToEntity(value);
+			loadOfManyToOne(ref);
 		}
 		if("oneToMany".equals(refType)) {
-			List<Object> list = loadOfOneToMany(ref);
-			setListOfRefToEntity(list);
+			loadOfOneToMany(ref);
 		}
 		if("manyToMany".equals(refType)) {
 			throw new OrmException("Don't support the many to many relation now!");
@@ -56,57 +57,86 @@ public class ReferenceFactory <S extends Serializable> {
 	}
 	
 	/**
-	 * @param ref
-	 * @return
-	 */
-	private Object loadOfOneToOne(Ref ref) {
-		S id = entity.getId();
-		String bean = ref.getBean();
-		Object service = getBean(bean);
-		String methodName = ref.getMethod();
-		Method method = getMethod(service, methodName);
-		try {
-			return method.invoke(service, id);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new OrmException("error when invoking the service by reflect", e);
-		}
-	}
-	
-	/**
-	 * @param ref
-	 * @return
-	 */
-	private Object loadOfManyToOne(Ref ref) {
-		String refKey = ref.getRefKey();
-		Object id = BeanUtils.getValueByField(entity, refKey);
-		if(id==null) return null;
-		String bean = ref.getBean();
-		Object service = getBean(bean);
-		String methodName = ref.getMethod();
-		Method method = getMethod(service, methodName);
-		try {
-			return method.invoke(service, id);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new OrmException("error when invoking the service by reflect", e);
-		}
-	}
-	
-	/**
-	 * @param ref
-	 * @param vo
-	 * @return
+	 * load data of the one to one relation.
+	 * @param ref the information of reference.
 	 */
 	@SuppressWarnings("unchecked")
-	private List<Object> loadOfOneToMany(Ref ref) {
-		S id = entity.getId();
+	private void loadOfOneToOne(Ref ref) {
+		if(ref==null||entities==null||entities.isEmpty()) return;
+		List<S> ids = new ArrayList<>();
+		for(T entity : entities) ids.add(entity.getId());
 		String bean = ref.getBean();
 		Object service = getBean(bean);
-		String methodName = ref.getMethod();
+		String methodName = ref.getListMethod();
 		Method method = getMethod(service, methodName);
+		Collection<Entity<S>> listOfEntitiesNeedRef;
 		try {
-			return (List<Object>)method.invoke(method, id);
+			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, ids);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new OrmException("error when invoking the service by reflect", e);
+		}
+		
+		Map<S,Entity<S>> mapOfEntitiesNeedRef = new HashMap<>();
+		for(Entity<S> enj : listOfEntitiesNeedRef ) mapOfEntitiesNeedRef.put(enj.getId(), enj);
+		
+		for(T entity : entities) {
+			Entity<S> enj = mapOfEntitiesNeedRef.get(entity.getId());
+			setValueOfRefToEntity(entity, enj);
+		}
+	}
+	
+	/**
+	 * load data of the many to one relation.
+	 * @param ref the information of reference.
+	 */
+	@SuppressWarnings("unchecked")
+	private void loadOfManyToOne(Ref ref) {
+		if(ref==null||entities==null||entities.isEmpty()) return;
+		String refKey = ref.getRefKey();
+		List<S> ids = new ArrayList<>();
+		for(T entity : entities) {
+			S id = (S)BeanUtils.getValueByField(entity, refKey);
+			ids.add(id);
+		}
+		String bean = ref.getBean();
+		Object service = getBean(bean);
+		String methodName = ref.getListMethod();
+		Method method = getMethod(service, methodName);
+		Collection<Entity<S>> listOfEntitiesNeedRef;
+		try {
+			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, ids);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new OrmException("error when invoking the service by reflect", e);
+		}
+		
+		Map<S,Entity<S>> mapOfEntitiesNeedRef = new HashMap<>();
+		for(Entity<S> enj : listOfEntitiesNeedRef ) mapOfEntitiesNeedRef.put(enj.getId(), enj);
+		
+		for(T entity : entities) {
+			S id = (S)BeanUtils.getValueByField(entity, refKey);
+			Entity<S> enj = mapOfEntitiesNeedRef.get(id);
+			setValueOfRefToEntity(entity, enj);
+		}
+	}
+	
+	/**
+	 * load data of the one to many relation.
+	 * @param ref the information of reference.
+	 */
+	@SuppressWarnings("unchecked")
+	private void loadOfOneToMany(Ref ref) {
+		if(ref==null||entities==null||entities.isEmpty()) return;
+		String bean = ref.getBean();
+		Object service = getBean(bean);
+		String methodName = ref.getListMethod();
+		Method method = getMethod(service, methodName);
+		for(T entity : entities) {
+			try {
+				List<Object> list = (List<Object>)method.invoke(method, entity.getId());
+				setListOfRefToEntity(entity, list);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new OrmException("error when invoking the service by reflect", e);
+			}
 		}
 	}
 	
@@ -133,7 +163,8 @@ public class ReferenceFactory <S extends Serializable> {
 	 * @return the reference of the method
 	 */
 	private Method getMethod(Object service, String name) {
-		if(name==null||name.isEmpty()) throw new OrmException("The method name is empty!");
+		if(name==null||name.isEmpty()) 
+			throw new OrmException("The method name is empty![service:"+service.getClass().getName()+", method:"+name+"]");
 		Method[] allOfMethods = service.getClass().getDeclaredMethods();
 		for(Method method : allOfMethods) {
 			if(method.getName().equals(name)) return method;
@@ -142,19 +173,19 @@ public class ReferenceFactory <S extends Serializable> {
 	}
 	
 	/**
-	 * set value of the join to the entity.
+	 * set value of the join to the value object.
 	 * @param list the list of value.
 	 */
-	private void setValueOfRefToEntity(Object value) {
+	private void setValueOfRefToEntity(T entity, Object value) {
 		String name = ref.getName();
 		BeanUtils.setValueByField(entity, name, value);
 	}
 	
 	/**
-	 * set value of the join to the entity.
+	 * set value of the join to the value object.
 	 * @param list the list of value.
 	 */
-	private void setListOfRefToEntity(List<Object> list) {
+	private void setListOfRefToEntity(T entity, List<Object> list) {
 		String name = ref.getName();
 		BeanUtils.setValueByField(entity, name, list);
 	}

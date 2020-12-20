@@ -19,7 +19,7 @@ import com.demo2.support.utils.BeanUtils;
  */
 public class GenericEntityFactory<S extends Serializable> {
 	private Join join;
-	private Entity<S> vo;
+	private Entity<S> entity;
 	private BasicDao dao;
 
 	/**
@@ -28,25 +28,25 @@ public class GenericEntityFactory<S extends Serializable> {
 	 * @param vo the value object
 	 * @param dao the data access object
 	 */
-	public void build(Join join, Entity<S> vo, BasicDao dao) {
+	public void build(Join join, Entity<S> entity, BasicDao dao) {
 		this.join = join;
-		this.vo = vo;
+		this.entity = entity;
 		this.dao = dao;
 		
 		String joinType = join.getJoinType();
 		Entity<S> template;
 		if("oneToOne".equals(joinType)) {
-			template = loadOfOneToOne(join, vo);
+			template = loadOfOneToOne(join);
 			setValueOfJoinToVo(template);
 			return;
 		}
 		if("manyToOne".equals(joinType)) {
-			template = loadOfManyToOne(join, vo);
+			template = loadOfManyToOne(join);
 			setValueOfJoinToVo(template);
 			return;
 		}
 		if("oneToMany".equals(joinType)) {
-			List<Entity<S>> list = loadOfOneToMany(join, vo);
+			List<Entity<S>> list = loadOfOneToMany(join);
 			setValueOfJoinToVo(list);
 			return;
 		}
@@ -56,12 +56,12 @@ public class GenericEntityFactory<S extends Serializable> {
 	}
 	
 	/**
-	 * @param join
-	 * @param vo
-	 * @return
+	 * load data of the one to one relation.
+	 * @param join the join information
+	 * @return the entity need to join, if no data then return null.
 	 */
-	private Entity<S> loadOfOneToOne(Join join, Entity<S> vo) {
-		S id = vo.getId();
+	private Entity<S> loadOfOneToOne(Join join) {
+		S id = entity.getId();
 		String clazz = join.getClazz();
 		Entity<S> template = BeanUtils.createEntity(clazz, id);
 		return dao.load(id, template);
@@ -70,13 +70,12 @@ public class GenericEntityFactory<S extends Serializable> {
 	/**
 	 * load data of the many to one relation.
 	 * @param join the join information
-	 * @param vo the value object
-	 * @return the entity that should join, if no data then return null.
+	 * @return the entity need to join, if no data then return null.
 	 */
-	private Entity<S> loadOfManyToOne(Join join, Entity<S> vo) {
+	private Entity<S> loadOfManyToOne(Join join) {
 		String joinKey = join.getJoinKey();
 		@SuppressWarnings("unchecked")
-		S id = (S)BeanUtils.getValueByField(vo, joinKey);
+		S id = (S)BeanUtils.getValueByField(entity, joinKey);
 		if(id==null) return null;
 		String clazz = join.getClazz();
 		Entity<S> template = BeanUtils.createEntity(clazz, id);
@@ -84,11 +83,12 @@ public class GenericEntityFactory<S extends Serializable> {
 	}
 	
 	/**
-	 * get value of the join.
-	 * @return a list of entity.
+	 * load data of the one to many relation.
+	 * @param join the join information
+	 * @return the entity need to join, if no data then return null.
 	 */
-	private List<Entity<S>> loadOfOneToMany(Join join, Entity<S> vo) {
-		S id = vo.getId();
+	private List<Entity<S>> loadOfOneToMany(Join join) {
+		S id = entity.getId();
 		String clazz = join.getClazz();
 		Entity<S> template = BeanUtils.createEntity(clazz, null);
 		String joinKey = join.getJoinKey();
@@ -100,9 +100,9 @@ public class GenericEntityFactory<S extends Serializable> {
 	 * set value of the join to the value object.
 	 * @param list the list of value.
 	 */
-	private void setValueOfJoinToVo(Entity<S> template) {
+	private void setValueOfJoinToVo(Entity<S> value) {
 		String name = join.getName();
-		BeanUtils.setValueByField(vo, name, template);
+		BeanUtils.setValueByField(entity, name, value);
 	}
 	
 	/**
@@ -111,6 +111,6 @@ public class GenericEntityFactory<S extends Serializable> {
 	 */
 	private void setValueOfJoinToVo(List<Entity<S>> list) {
 		String name = join.getName();
-		BeanUtils.setValueByField(vo, name, list);
+		BeanUtils.setValueByField(entity, name, list);
 	}
 }

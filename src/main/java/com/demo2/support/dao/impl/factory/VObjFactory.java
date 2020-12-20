@@ -147,6 +147,8 @@ public class VObjFactory extends XmlBuildFactoryTemplate {
 		ref.setBean(bean);
 		String method = element.getAttribute("method");
 		ref.setMethod(method);
+		String listMethod = element.getAttribute("listMethod");
+		ref.setListMethod(listMethod);
 		return ref;
 	}
 }

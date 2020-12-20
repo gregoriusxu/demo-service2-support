@@ -13,6 +13,19 @@ public class Ref {
 	private String refType;
 	private String bean;
 	private String method;
+	private String listMethod;
+	/**
+	 * @return the listMethod
+	 */
+	public String getListMethod() {
+		return listMethod;
+	}
+	/**
+	 * @param listMethod the listMethod to set
+	 */
+	public void setListMethod(String listMethod) {
+		this.listMethod = listMethod;
+	}
 	/**
 	 * @return the name
 	 */

@@ -17,6 +17,7 @@ import com.demo2.support.dao.impl.factory.VObj;
 import com.demo2.support.dao.impl.factory.VObjFactory;
 import com.demo2.support.entity.Entity;
 import com.demo2.support.entity.ResultSet;
+import com.demo2.support.exception.QueryException;
 import com.demo2.support.service.impl.QueryServiceImpl;
 
 /**
@@ -31,6 +32,7 @@ public class AutofillQueryServiceImpl extends QueryServiceImpl {
 	 * @return the dao
 	 */
 	public BasicDao getDao() {
+		if(dao==null) throw new QueryException("The dao is null");
 		return dao;
 	}
 	/**
@@ -98,10 +100,8 @@ public class AutofillQueryServiceImpl extends QueryServiceImpl {
 	 */
 	private <S extends Serializable, T extends Entity<S>> void autoFillJoin(List<T> list, Join join) {
 		if(list==null||list.isEmpty()||join==null) return;
-		for(T vo : list) {
-			GenericEntityFactory<S> factory = new GenericEntityFactory<S>();
-			factory.build(join, vo, dao);
-		}
+		GenericEntityFactoryForList<S, T> factory = new GenericEntityFactoryForList<>();
+		factory.build(join, list, getDao());
 	}
 	
 	@Autowired
@@ -114,9 +114,7 @@ public class AutofillQueryServiceImpl extends QueryServiceImpl {
 	 */
 	private <S extends Serializable, T extends Entity<S>> void autoFillRef(List<T> list, Ref ref) {
 		if(list==null||list.isEmpty()||ref==null) return;
-		for(T vo : list) {
-			ReferenceFactory<S> factory = new ReferenceFactory<>(context);
-			factory.build(ref, vo);
-		}
+		ReferenceFactoryForList<S, T> factory = new ReferenceFactoryForList<>(context);
+		factory.build(ref, list);
 	}
 }
