@@ -24,9 +24,9 @@ public class FileResourceLoaderTest {
 		
 	}
 	
-	@Test
+	//@Test
 	public void testWithAbsolutedPath() throws IOException {
-		String path = "C:\\Development\\demo\\demo-ddd-trade\\src\\test\\java\\com\\demo2\\support\\xml";
+		String path = "C:\\Development\\demo\\demo-service2-support\\src\\test\\java\\com\\demo2\\support\\xml";
 		loader.loadResource(is->assertNotNull(is), path);
 	}
 }

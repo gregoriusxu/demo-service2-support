@@ -19,8 +19,19 @@ public class UrlResourceLoaderTest {
 
 	@Test
 	public void testWithClassPath() throws IOException {
-		String path = "classpath:vObj.xml";
+		String path = "classpath*:vObj.xml";
 		loader.loadResource(is->assertNotNull(is), path);
 	}
 
+	//@Test
+	public void testWithFilePath() throws IOException {
+		String path = "file:C:\\Development\\demo\\demo-service2-support\\src\\test\\java\\com\\demo2\\support\\xml";
+		loader.loadResource(is->assertNotNull(is), path);
+	}
+	
+	@Test
+	public void testWithRelativePath() throws IOException {
+		String path = "/mapper/genericDaoMapper.xml";
+		loader.loadResource(is->assertNotNull(is), path);
+	}
 }

@@ -3,6 +3,7 @@ package com.demo2.support.xml;
 import java.io.IOException;
 
 /**
+ * The loader for reading resources.
  * @author fangang
  */
 public interface ResourceLoader {

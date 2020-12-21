@@ -44,21 +44,11 @@ public class VObjFactory extends XmlBuildFactoryTemplate {
 		return vObj;
 	}
 	
-	@Override
-	protected void buildFactory(Element root) {
-		NodeList nodeList = root.getChildNodes();
-		for(int i=0; i<=nodeList.getLength(); i++) {
-			Node node = nodeList.item(i);
-			if(!(node instanceof Element)) continue;
-			Element element = (Element) node;
-			loadBean(element);
-		}
-	}
-	
 	/**
 	 * decode a value object configure and load into the factory.
 	 * @param element
 	 */
+	@Override
 	protected void loadBean(Element element) {
 		VObj vObj = new VObj();
 		String clazz = element.getAttribute("class");

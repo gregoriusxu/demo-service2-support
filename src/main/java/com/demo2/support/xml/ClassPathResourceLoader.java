@@ -12,7 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 /**
- * load resources with class path local.
+ * load resources with class local path.
  * @author fangang
  */
 public class ClassPathResourceLoader 
