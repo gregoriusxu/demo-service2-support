@@ -12,8 +12,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.demo2.support.exception.DaoException;
 import com.demo2.support.xml.XmlBuildFactoryTemplate;
+import com.demo2.support.exception.DaoException;
 
 /**
  * The factory that get the configure of the value objects.
