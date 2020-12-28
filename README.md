@@ -1,11 +1,12 @@
 # Demo-service-xxx系列的使用说明
 这是一套简单易用、支持DDD与微服务的技术框架，它一方面演示了整个微服务的技术架构，同时为微服务下如何打造支持快速交付的技术中台提出了全新的思想。
 该示例包含如下项目：
+
 ```bash
 demo-parent             本示例所有项目的父项目，它集成了springboot, springcloud，并定义各项目如何maven打包
-demo-service-eureka     微服务注册中心eureka
+demo-service-eureka     微服务注册中心eureka，特别是高可用eureka集群
 demo-service-config     微服务配置中心config
-demo-service-turbine    各微服务断路器运行状况监控turbine
+demo-service-turbine    各微服务断路器运行状况监控器turbine
 demo-service-zuul       服务网关zuul
 demo-service-parent     各业务微服务（无数据库访问）的父项目
 demo-service-support    各业务微服务（无数据库访问）底层技术框架
@@ -27,14 +28,17 @@ demo-service2-order     订单管理微服务（有数据库访问）
 在本框架中，不需要为每个业务模块编写Controller，整个系统只有2个Controller（增删改操作一个，查询一个）。通过规范，首先让业务开发人员在开发代码时，将前端的Json与后台的值对象对应起来，那么本框架就通过反射，自动地将前端Json中的数据，转换成后台的值对象，然后通过反射去调用相应的Service。这样的设计，既避免了以往设计中写大量的Controller，使系统开发成本高而不易维护与变更，又是的业务开发人员没有机会将业务代码写到Controller中，而是规范地编写到Bus/Service中，从而规范了系统分层，有利于日后的维护。
 
 在使用单Controller以后，前端所有功能的增删改操作，以及基于id的get/load操作，都是访问的OrmController。前端在访问OrmController时，输入如下http请求：
+
 ```bash
 http://localhost:9003/orm/{bean}/{method}
 ```
 例如：
+
 ```bash
 GET请求：http://localhost:9003/orm/product/deleteProduct?id=P00006
 ```
 或者
+
 ```bash
 POST请求：http://localhost:9003/orm/product/saveProduct
 "id=P00006&name=ThinkPad+T220&price=4600&unit=%E4%B8%AA&supplierId=S0002&classify=%E5%8A%9E%E5%85%AC%E7%94%A8%E5%93%81"
@@ -44,6 +48,7 @@ POST请求：http://localhost:9003/orm/product/saveProduct
 
 如果要调用的方法有值对象，必须将值对象放在方法的第一个参数上。如果要调用的方法既有值对象，又有其它参数，则值对象中的属性与其它参数都这样调用：
 要调用的方法：saveProduct(product, saveMode);
+
 ```bash
 POST请求：http://localhost:9003/orm/product/saveProduct
 "id=P00006&name=ThinkPad+T220&price=4600&unit=%E4%B8%AA&supplierId=S0002&classify=%E5%8A%9E%E5%85%AC%E7%94%A8%E5%93%81&saveMode=1"
@@ -53,6 +58,7 @@ POST请求：http://localhost:9003/orm/product/saveProduct
 
 ### 2）单Dao的设计
 在本框架中，不需要为每个业务模块编写Dao，所有的Service都只需要配一个Dao。那么如何进行持久化呢？将每个值对象对应的表，以及值对象中每个属性对应的字段，通过vObj.xml配置文件进行对应，那么通用的BasicDao就可以通过配置文件形成SQL，并最终完成数据库持久化操作。vObj.xml配置文件：
+
 ```bash
 <?xml version="1.0" encoding="UTF-8"?>
 <vobjs>
@@ -77,12 +83,14 @@ POST请求：http://localhost:9003/orm/product/saveProduct
 本框架采用CQRS（命令与查询职责分离）的设计模式，所有的SQL查询都使用另一个Controller（QueryController）来进行查询（注意：基于id的get/load方法使用OrmController来查询）。
 
 在进行查询时，前端输入http请求：
+
 ```bash
 http://localhost:9003/query/{bean}
 ```
 该请求既可以接收POST请求，也可以接收GET请求。{bean}是配置在Spring中的Service。QueryController通过该请求，在Spring中找到Service，并调用Service.query(map)进行查询，此处的map就是该请求传递的所有查询参数。
 
 本框架在查询时采用了单Service的设计，既所有的查询都是配置QueryService进行查询，但注入的是不同的Dao，就可以完成各自不同的查询。每个Dao都是通过MyBatis框架，注入同一个Dao但配置不同的mapper，就可以完成不同的查询。因此，先配置MyBatis的Mapper文件诸如：
+
 ```bash
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
@@ -129,6 +137,7 @@ http://localhost:9003/query/{bean}
 </mapper>
 ```
 然后将其注入到Spring中，完成相应的配置，就可以进行查询：
+
 ```bash
 	<bean id="customerQry" class="com.demo2.support.service.impl.QueryServiceImpl">
 		<property name="queryDao">
@@ -139,6 +148,7 @@ http://localhost:9003/query/{bean}
 	</bean>
 ```
 此外，如果希望在查询前与查询后加入某些处理程序，则继承QueryServiceImpl并重载beforeQuery或afterQuery，例如：
+
 ```bash
 /**
  * The implement of the query service for products.
@@ -202,6 +212,7 @@ public class ProductQueryServiceImpl extends QueryServiceImpl {
 
 ### 1）统一数据建模
 本框架在通过vObj.xml进行数据建模的时候，加入了join标签。当某个值对象在进行查询时需要进行join操作，本框架不建议将join操作写入SQL语句中，而是进行如下配置：
+
 ```bash
   <vo class="com.demo2.trade.entity.Product" tableName="Product">
     <property name="id" column="id" isPrimaryKey="true"></property>
@@ -214,6 +225,7 @@ public class ProductQueryServiceImpl extends QueryServiceImpl {
   </vo>
 ```
 在Product值对象中加入Supplier属性并进行以上配置，则Product在进行get/load操作或query操作时，可以自动补填Supplier。为了实现补填功能，Service在dao注入时，应当注入repository而不是basicDao。在进行查询时，bean也应当配置AutofillQueryServiceImpl并配置其dao：
+
 ```bash
 	<bean id="productQry" class="com.demo2.support.repository.AutofillQueryServiceImpl">
 		<property name="queryDao">
@@ -225,6 +237,7 @@ public class ProductQueryServiceImpl extends QueryServiceImpl {
 	</bean>
 ```
 该配置也支持oneToOne、manyToOne、oneToMany，但不支持manyToMany（基于性能的考虑）。当类型是oneToMany时，补填的是一个集合，因此值对象中也应当是一个集合，例如Customer中有一个Address是oneToMany：
+
 ```bash
 /**
  * The customer entity
@@ -250,6 +263,7 @@ public class Customer extends Entity<Long> {
 }
 ```
 因此，在vObj.xml中进行如下配置：
+
 ```bash
   <vo class="com.demo2.trade.entity.Customer" tableName="Customer">
     <property name="id" column="id" isPrimaryKey="true"></property>
@@ -270,6 +284,7 @@ public class Customer extends Entity<Long> {
 传统的领域驱动框架，每个业务模块都要编写自己的DDD仓库与工厂。但本框架为了简化领域驱动设计的设计，整个系统只使用一个通用的DDD仓库与工厂。DDD的通用工厂已经封装在了DDD仓库中，不需要使用者进行任何配置编码。DDD的通用仓库，实际上是BasicDao的一个装饰者，它实现了BasicDao的所有数据库持久化操作，但在这些操作的基础上实现了DDD所需的功能，如数据补填与内置聚合实现。除此之外，如果dao配置的是RepositoryWithCache，还可以实现Redis的缓存功能，即在加载或查询值对象以后，将缓存在Redis中，这样下一次查询时将不再查询数据库，而是从Redis中获取。
 
 要使用Redis缓存，需要在application.yml（或properties）配置文件中加入Redis的配置：
+
 ```bash
 spring:
   redis:
@@ -288,6 +303,7 @@ timeout: 1000
 采用以上支持领域驱动的技术架构，在转型为微服务架构时还存在问题。比如，在加载Product时，通过join标签需要补填Supplier。而Supplier通过微服务拆分，可能在另一个微服务中，因此Product微服务通过数据库根本无法访问Supplier表。这时，通过join标签是没有办法完成Supplier的补填工作的。因此，本框架添加了ref标签。
 
 为了使用ref标签，需要在Product微服务中添加Supplier接口并编写Feign注解：
+
 ```bash
 /**
  * The service of suppliers.
@@ -316,6 +332,7 @@ public interface SupplierService {
 }
 ```
 通过该接口，Product微服务就可以远程调用Supplier微服务提供的API进行远程调用。接着，就可以在vObj.xml中通过ref标签进行建模：
+
 ```bash
   <vo class="com.demo2.trade.entity.Product" tableName="Product">
     <property name="id" column="id" isPrimaryKey="true"></property>
@@ -324,7 +341,8 @@ public interface SupplierService {
     <property name="unit" column="unit"></property>
     <property name="classify" column="classify"></property>
     <property name="supplier_id" column="supplier_id"></property>
-    <ref name="supplier" refKey="supplier_id" refType="manyToOne" bean="com.demo2.product.service.SupplierService" method="loadSupplier"></ref>
+    <ref name="supplier" refKey="supplier_id" refType="manyToOne" bean="com.demo2.product.service.SupplierService" method="loadSupplier" listMethod="loadSuppliers"></ref>
   </vo>
 ```
 这里bean就是那个Feign接口。通过该配置，在装载或查询Product的时候，就会远程调用Supplier微服务完成信息的补填。
+同时，Supplier微服务应当提供2个接口，一个是通过单个id进行查找，一个是通过多个id进行批量查找，以提升系统性能。
