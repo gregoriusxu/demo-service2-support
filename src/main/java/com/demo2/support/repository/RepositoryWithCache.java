@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -53,13 +52,14 @@ public class RepositoryWithCache extends Repository implements BasicDao {
 		if(ids==null||template==null) return null;
 		
 		Collection<T> entities = cache.getForList(ids, template);
+		entities.removeIf(t->t==null);
 		List<S> otherIds = getIdsNotInCache(ids, entities);
 		if(otherIds.isEmpty()) return (List<T>)entities; //cache get all of the entities.
 		
 		List<T> list = super.loadForList(otherIds, template);
 		
 		if(otherIds.size()==ids.size()) return list; //all of the entities query for database.
-		return (List<T>)fillOtherEntitiesIn(ids, entities, list); //fill the entity query for db in the list of entities get in cache.
+		return (List<T>)fillOtherEntitiesIn(entities, list); //fill the entity query for db in the list of entities get in cache.
 	}
 	
 	/**
@@ -68,12 +68,12 @@ public class RepositoryWithCache extends Repository implements BasicDao {
 	 * @return all of the id not in cache
 	 */
 	private <S extends Serializable, T extends Entity<S>> List<S> getIdsNotInCache(Collection<S> ids, Collection<T> entities) {
+		Map<S, T> map = new HashMap<>();
+		for(T entity : entities) if(entity!=null) map.put(entity.getId(), entity);
 		List<S> otherIds = new ArrayList<>();
-		Iterator<T> entity = entities.iterator();
-		Iterator<S> id = ids.iterator();
-		while(entity.hasNext()&&id.hasNext()) {
-			if(entity.next()==null) otherIds.add(id.next());
-		}
+		for(S id : ids) 
+			if(id!=null&&map.get(id)==null) 
+				otherIds.add(id);
 		return otherIds;
 	}
 	
@@ -85,19 +85,8 @@ public class RepositoryWithCache extends Repository implements BasicDao {
 	 * @return the list of entities
 	 */
 	private <S extends Serializable, T extends Entity<S>> 
-			Collection<T> fillOtherEntitiesIn(Collection<S> ids, Collection<T> entities, Collection<T> otherEntities) {
-		Map<S,T> map = new HashMap<>();
-		for(T value : otherEntities) {
-			map.put(value.getId(), value);
-		}
-		
-		Iterator<T> voIter = entities.iterator();
-		Iterator<S> idIter = ids.iterator();
-		while(voIter.hasNext()&&idIter.hasNext()) {
-			T entity = voIter.next();
-			if(entity!=null) continue;
-			entity = map.get(idIter.next());
-		}
+			Collection<T> fillOtherEntitiesIn(Collection<T> entities, Collection<T> otherEntities) {
+		entities.addAll(otherEntities);
 		return entities;
 	}
 
