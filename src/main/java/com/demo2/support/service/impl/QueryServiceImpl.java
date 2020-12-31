@@ -45,20 +45,22 @@ public class QueryServiceImpl implements QueryService {
 	
 	/**
 	 * do something before query. 
-	 * It just a hood that override the function in subclass if we need do something before query.
+	 * It just a hook that override the function in subclass if we need do something before query.
 	 * @param params the parameters the query need
 	 */
 	protected void beforeQuery(Map<String, Object> params) {
-		//just a hood
+		//just a hook
 	}
 	
 	/**
+	 * do something after query.
+	 * It just a hook that override the function in subclass if we need do something after query.
 	 * @param params the parameters the query need
-	 * @param resultSet the result set after query.
-	 * @return 
+	 * @param resultSet the result set before do something.
+	 * @return the result set after do something.
 	 */
 	protected ResultSet afterQuery(Map<String, Object> params, ResultSet resultSet) {
-		//just a hood
+		//just a hook
 		return resultSet;
 	}
 	

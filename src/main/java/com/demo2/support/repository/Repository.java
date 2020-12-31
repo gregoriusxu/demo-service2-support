@@ -23,28 +23,13 @@ import com.demo2.support.utils.BeanUtils;
  * 2)if the entity has any join and the join is aggregation, save the join data in same transaction.
  * @author fangang
  */
-public class Repository implements BasicDao {
-	private BasicDao dao;
+public class Repository extends DecoratorDao implements BasicDao {
 	@Autowired
 	private ApplicationContext context;
 	
-	/**
-	 * @return the dao
-	 */
-	public BasicDao getDao() {
-		return dao;
-	}
-
-	/**
-	 * @param dao the dao to set
-	 */
-	public void setDao(BasicDao dao) {
-		this.dao = dao;
-	}
-
 	@Override
 	public <S extends Serializable, T extends Entity<S>> T load(S id, T template) {
-		T entity = dao.load(id, template);
+		T entity = super.load(id, template);
 		setJoins(entity);
 		setRefs(entity);
 		return entity;
@@ -161,9 +146,9 @@ public class Repository implements BasicDao {
 			if(value==null) continue;
 			if(Collection.class.isAssignableFrom(value.getClass())) {
 				Collection<?> collection = (Collection<?>)value;
-				dao.insertOrUpdateForList(collection);//is a lot of items.
+				super.insertOrUpdateForList(collection);//is a lot of items.
 			} else {
-				dao.insertOrUpdate(value);//just one item.
+				super.insertOrUpdate(value);//just one item.
 			}
 		}
 	}
@@ -184,9 +169,9 @@ public class Repository implements BasicDao {
 			if(value==null) continue;
 			if(Collection.class.isAssignableFrom(value.getClass())) {
 				Collection<?> collection = (Collection<?>)value;
-				dao.deleteForList(collection);//is a lot of items.
+				super.deleteForList(collection);//is a lot of items.
 			} else {
-				dao.delete(value);//just one item.
+				super.delete(value);//just one item.
 			}
 		}
 	}
@@ -194,21 +179,21 @@ public class Repository implements BasicDao {
 	@Override
 	@Transactional
 	public <T> void insert(T entity) {
-		dao.insert(entity);
+		super.insert(entity);
 		saveJoins(entity);
 	}
 
 	@Override
 	@Transactional
 	public <T> void update(T entity) {
-		dao.update(entity);
+		super.update(entity);
 		saveJoins(entity);
 	}
 
 	@Override
 	@Transactional
 	public <T> void insertOrUpdate(T entity) {
-		dao.insertOrUpdate(entity);
+		super.insertOrUpdate(entity);
 		saveJoins(entity);
 	}
 
@@ -221,7 +206,7 @@ public class Repository implements BasicDao {
 	@Override
 	@Transactional
 	public <T> void delete(T entity) {
-		dao.delete(entity);
+		super.delete(entity);
 		deleteJoins(entity);
 	}
 
@@ -233,7 +218,7 @@ public class Repository implements BasicDao {
 
 	@Override
 	public <S extends Serializable, T extends Entity<S>> List<T> loadAll(T template) {
-		List<T> list = dao.loadAll(template);
+		List<T> list = super.loadAll(template);
 		setJoinsForList(list);
 		setRefsForList(list);
 		return list;
@@ -243,15 +228,15 @@ public class Repository implements BasicDao {
 	@Transactional
 	public <S extends Serializable, T extends Entity<S>> void delete(S id, T template) {
 		if(hasJoinAndAggregation(template)||hasRefAndAggregation(template)) {
-			T entity = dao.load(id, template);
+			T entity = super.load(id, template);
 			delete(entity);
-		} else dao.delete(id, template);
+		} else super.delete(id, template);
 	}
 
 	@Override
 	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(Collection<S> ids, T template) {
 		if(ids==null||template==null) return null;
-		List<T> list = dao.loadForList(ids, template);
+		List<T> list = super.loadForList(ids, template);
 		for(T entity : list) {
 			setJoins(entity);
 			setRefs(entity);
@@ -263,8 +248,8 @@ public class Repository implements BasicDao {
 	@Transactional
 	public <S extends Serializable, T extends Entity<S>> void deleteForList(Collection<S> ids, T template) {
 		if(hasJoinAndAggregation(template)||hasRefAndAggregation(template)) {
-			List<T> list = dao.loadForList(ids, template);
+			List<T> list = super.loadForList(ids, template);
 			deleteForList(list);
-		} else dao.deleteForList(ids, template);
+		} else super.deleteForList(ids, template);
 	}
 }
