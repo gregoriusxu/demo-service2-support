@@ -5,16 +5,20 @@ package com.demo2.support.utils;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.alibaba.fastjson.JSONObject;
 import com.demo2.support.entity.Entity;
 import com.demo2.support.exception.OrmException;
 
@@ -131,6 +135,7 @@ public class BeanUtils {
 	 * @param value
 	 * @return the downcast value
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Object bind(Type type, Object value) {
 		if(value==null) return value;
 		if(type instanceof Class) {
@@ -151,6 +156,12 @@ public class BeanUtils {
 				List<String> listOfStr = Arrays.asList(str.split(","));
 				return (clazz.equals(List.class)) ? listOfStr : new HashSet<String>(listOfStr);
 			}
+			
+			if(EntityUtils.isEntity(clazz)) {
+				Map<String, String> json = new HashMap<>();
+				json = JSONObject.parseObject(str, json.getClass());
+				return EntityUtils.createEntity((Class<Entity>)clazz, json);
+			}
 			//TODO do nothing with other types
 		} else if(type instanceof ParameterizedType) {
 			ParameterizedType pt = (ParameterizedType)type;
@@ -169,7 +180,8 @@ public class BeanUtils {
 	 * @param str the value
 	 * @return the downcast value
 	 */
-	private static Object bindListOrSet(ParameterizedType pt, String str) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+private static Object bindListOrSet(ParameterizedType pt, String str) {
 		Class<?> clazz = (Class<?>)pt.getRawType();
 		List<String> listOfStr = Arrays.asList(str.split(","));
 		Type ata = pt.getActualTypeArguments()[0];
@@ -189,9 +201,15 @@ public class BeanUtils {
 				return convert(listOfStr, clazz, s->{return new Short(s);});
 			
 			if(ataClazz.equals(Date.class)&&listOfStr.get(0).length()==10)
-				return convert(listOfStr, clazz, s->{return DateUtils.getDate(str,"yyyy-MM-dd");});
+				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd");});
 			if(ataClazz.equals(Date.class))
-				return convert(listOfStr, clazz, s->{return DateUtils.getDate(str,"yyyy-MM-dd HH:mm:ss");});
+				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd HH:mm:ss");});
+			if(EntityUtils.isEntity(ataClazz))
+				return convert(listOfStr, clazz, s->{
+					Map<String, String> json = new HashMap<>();
+					json = JSONObject.parseObject(s, json.getClass());
+					return EntityUtils.createEntity((Class<Entity>)ataClazz, json);
+					});
 		} else {
 			//TODO do nothing other types.
 		}
@@ -215,5 +233,22 @@ public class BeanUtils {
 	@FunctionalInterface
 	interface NewInstance<T> {
 		T apply(String s);
+	}
+	
+	/**
+	 * get the method of the service by name, using reflect.
+	 * @param service
+	 * @param methodName the name of the method
+	 * @return the reference of the method
+	 */
+	public static Method getMethod(Object obj, String methodName) {
+		if(methodName==null||methodName.isEmpty()) throw new OrmException("The method name is empty!");
+		Method[] allOfMethods = obj.getClass().getDeclaredMethods();
+		Method rtn = null;
+		for(Method method : allOfMethods) {
+			if(method.getName().equals(methodName)) rtn = method;
+		}
+		if(rtn!=null) return rtn; //if have override, return the last one.
+		throw new OrmException("No such method["+methodName+"] in the Object["+obj.getClass().getName()+"]");
 	}
 }
