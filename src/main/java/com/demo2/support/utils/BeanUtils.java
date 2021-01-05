@@ -3,7 +3,6 @@
  */
 package com.demo2.support.utils;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -12,13 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.alibaba.fastjson.JSONObject;
 import com.demo2.support.entity.Entity;
 import com.demo2.support.exception.OrmException;
 
@@ -27,47 +23,6 @@ import com.demo2.support.exception.OrmException;
  * @author fangang
  */
 public class BeanUtils {
-	
-	/**
-	 * create an entity by class name.
-	 * @param className
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(String className) {
-		try {
-			@SuppressWarnings("unchecked")
-			Class<? extends Entity<S>> clazz = (Class<? extends Entity<S>>) Class.forName(className).asSubclass(Entity.class);
-			Entity<S> entity = createEntity(clazz);
-			return entity;
-		} catch (ClassNotFoundException e) {
-			throw new OrmException("error because the entity["+className+"] must exits and extends the class [Entity]", e);
-		}
-	}
-	
-	/**
-	 * create an entity by class name.
-	 * @param className
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(String className, S id) {
-		Entity<S> entity = createEntity(className);
-		entity.setId(id);
-		return entity;
-	}
-	
-	/**
-	 * create an entity by class
-	 * @param clazz
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(Class<? extends Entity<S>> clazz) {
-		try {
-			return clazz.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw new OrmException("error when instance the entity["+clazz.getName()+"]", e);
-		}
-	}
-	
 	/**
 	 * get the value from a bean by field name.
 	 * @param bean
@@ -157,11 +112,9 @@ public class BeanUtils {
 				return (clazz.equals(List.class)) ? listOfStr : new HashSet<String>(listOfStr);
 			}
 			
-			if(EntityUtils.isEntity(clazz)) {
-				Map<String, String> json = new HashMap<>();
-				json = JSONObject.parseObject(str, json.getClass());
-				return EntityUtils.createEntity((Class<Entity>)clazz, json);
-			}
+			if(EntityUtils.isEntity(clazz)) 
+				return EntityUtils.bindEntity((Class<Entity>)clazz, str);
+			
 			//TODO do nothing with other types
 		} else if(type instanceof ParameterizedType) {
 			ParameterizedType pt = (ParameterizedType)type;
@@ -181,7 +134,7 @@ public class BeanUtils {
 	 * @return the downcast value
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-private static Object bindListOrSet(ParameterizedType pt, String str) {
+	private static Object bindListOrSet(ParameterizedType pt, String str) {
 		Class<?> clazz = (Class<?>)pt.getRawType();
 		List<String> listOfStr = Arrays.asList(str.split(","));
 		Type ata = pt.getActualTypeArguments()[0];
@@ -204,12 +157,9 @@ private static Object bindListOrSet(ParameterizedType pt, String str) {
 				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd");});
 			if(ataClazz.equals(Date.class))
 				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd HH:mm:ss");});
+			
 			if(EntityUtils.isEntity(ataClazz))
-				return convert(listOfStr, clazz, s->{
-					Map<String, String> json = new HashMap<>();
-					json = JSONObject.parseObject(s, json.getClass());
-					return EntityUtils.createEntity((Class<Entity>)ataClazz, json);
-					});
+				return EntityUtils.bindListOrSetOfEntity((Class<Entity>)ataClazz, str);
 		} else {
 			//TODO do nothing other types.
 		}
@@ -246,7 +196,8 @@ private static Object bindListOrSet(ParameterizedType pt, String str) {
 		Method[] allOfMethods = obj.getClass().getDeclaredMethods();
 		Method rtn = null;
 		for(Method method : allOfMethods) {
-			if(method.getName().equals(methodName)) rtn = method;
+			if(method.getName().equals(methodName)) 
+				if(rtn==null||(rtn.getParameterTypes().length>0&&rtn.getParameterTypes()[0].isAssignableFrom(method.getParameterTypes()[0]))) rtn = method;
 		}
 		if(rtn!=null) return rtn; //if have override, return the last one.
 		throw new OrmException("No such method["+methodName+"] in the Object["+obj.getClass().getName()+"]");

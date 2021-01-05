@@ -15,6 +15,7 @@ import com.demo2.support.dao.impl.factory.Join;
 import com.demo2.support.entity.Entity;
 import com.demo2.support.exception.OrmException;
 import com.demo2.support.utils.BeanUtils;
+import com.demo2.support.utils.EntityUtils;
 
 /**
  * The generic ddd factory to load and assemble domain objects together, 
@@ -64,7 +65,7 @@ public class GenericEntityFactoryForList<S extends Serializable, T extends Entit
 		List<S> ids = new ArrayList<>();
 		for(T entity : entities) ids.add(entity.getId());
 		String clazz = join.getClazz();
-		Entity<S> template = BeanUtils.createEntity(clazz, null);
+		Entity<S> template = EntityUtils.createEntity(clazz, null);
 		List<Entity<S>> listOfEntitiesNeedJoin = dao.loadForList(ids, template);
 		
 		Map<S,Entity<S>> mapOfEntitiesNeedJoin = new HashMap<>();
@@ -90,7 +91,7 @@ public class GenericEntityFactoryForList<S extends Serializable, T extends Entit
 			ids.add(id);
 		}
 		String clazz = join.getClazz();
-		Entity<S> template = BeanUtils.createEntity(clazz, null);
+		Entity<S> template = EntityUtils.createEntity(clazz, null);
 		List<Entity<S>> listOfEntitiesNeedJoin = dao.loadForList(ids, template);
 		
 		Map<S,Entity<S>> mapOfEntitiesNeedJoin = new HashMap<>();
@@ -110,7 +111,7 @@ public class GenericEntityFactoryForList<S extends Serializable, T extends Entit
 	private void loadOfOneToMany(Join join) {
 		if(join==null||entities==null||entities.isEmpty()) return;
 		String clazz = join.getClazz();
-		Entity<S> template = BeanUtils.createEntity(clazz, null);
+		Entity<S> template = EntityUtils.createEntity(clazz, null);
 		String joinKey = join.getJoinKey();
 		for(T entity : entities) {
 			BeanUtils.setValueByField(template, joinKey, entity.getId());

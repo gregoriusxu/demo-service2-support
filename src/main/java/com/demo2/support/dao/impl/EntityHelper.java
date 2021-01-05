@@ -87,7 +87,7 @@ public class EntityHelper {
 		List<DaoHelper> listOfDaoHelper = new ArrayList<>();
 		for(S id : ids) {
 			@SuppressWarnings("unchecked")
-			T temp = (T)BeanUtils.createEntity((Class<T>)template.getClass());
+			T temp = (T)template.clone();
 			temp.setId(id);
 			DaoHelper helper = EntityHelper.readDataFromEntity(temp);
 			listOfDaoHelper.add(helper);

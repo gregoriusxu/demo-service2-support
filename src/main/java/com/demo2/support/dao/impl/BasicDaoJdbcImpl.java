@@ -17,7 +17,6 @@ import com.demo2.support.dao.BasicDao;
 import com.demo2.support.dao.impl.mybatis.GenericDao;
 import com.demo2.support.entity.Entity;
 import com.demo2.support.exception.DaoException;
-import com.demo2.support.utils.BeanUtils;
 
 /**
  * The implement of BasicDao with Jdbc.
@@ -105,7 +104,7 @@ public class BasicDaoJdbcImpl implements BasicDao {
 		List<T> listOfEntity = new ArrayList<T>();
 		for(Map<String, Object> map : list) {
 			@SuppressWarnings("unchecked")
-			T temp = (T)BeanUtils.createEntity((Class<T>)template.getClass());
+			T temp = (T)template.clone();
 			T entity = EntityHelper.convertMapToEntity(map, temp);
 			listOfEntity.add(entity);
 		}
@@ -120,7 +119,7 @@ public class BasicDaoJdbcImpl implements BasicDao {
 		List<T> listOfEntity = new ArrayList<>();
 		for(Map<String, Object> map : list) {
 			@SuppressWarnings("unchecked")
-			T temp = (T)BeanUtils.createEntity((Class<T>)template.getClass());
+			T temp = (T)template.clone();
 			T entity = EntityHelper.convertMapToEntity(map, temp);
 			listOfEntity.add(entity);
 		}
