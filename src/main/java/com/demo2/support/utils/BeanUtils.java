@@ -105,6 +105,7 @@ public class BeanUtils {
 			if(clazz.equals(Short.class)||clazz.equals(short.class)) return new Short(str);
 			
 			if(clazz.equals(Date.class)&&str.length()==10) return DateUtils.getDate(str,"yyyy-MM-dd");
+			if(clazz.equals(Date.class)&&str.length()==24) return DateUtils.getDateForUTC(str);
 			if(clazz.equals(Date.class)) return DateUtils.getDate(str,"yyyy-MM-dd HH:mm:ss");
 			
 			if(clazz.equals(List.class)||clazz.equals(Set.class)) {
@@ -120,7 +121,7 @@ public class BeanUtils {
 			ParameterizedType pt = (ParameterizedType)type;
 			Class<?> clazz = (Class<?>)pt.getRawType();
 			if(clazz.equals(List.class)||clazz.equals(Set.class)) {
-				return bindListOrSet(pt, value.toString());
+				return bindListOrSet(pt, value);
 			}
 			//TODO do nothing with map or other types.
 		}
@@ -134,9 +135,9 @@ public class BeanUtils {
 	 * @return the downcast value
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static Object bindListOrSet(ParameterizedType pt, String str) {
+	private static Object bindListOrSet(ParameterizedType pt, Object value) {
 		Class<?> clazz = (Class<?>)pt.getRawType();
-		List<String> listOfStr = Arrays.asList(str.split(","));
+		List<String> listOfStr = Arrays.asList(value.toString().split(","));
 		Type ata = pt.getActualTypeArguments()[0];
 		if(ata instanceof Class) {
 			Class<?> ataClazz = (Class<?>)ata;
@@ -159,11 +160,11 @@ public class BeanUtils {
 				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd HH:mm:ss");});
 			
 			if(EntityUtils.isEntity(ataClazz))
-				return EntityUtils.bindListOrSetOfEntity((Class<Entity>)ataClazz, str);
+				return EntityUtils.bindListOrSetOfEntity((Class<Entity>)ataClazz, value);
 		} else {
 			//TODO do nothing other types.
 		}
-		return str;
+		return value;
 	}
 	
 	/**
@@ -191,7 +192,7 @@ public class BeanUtils {
 	 * @param methodName the name of the method
 	 * @return the reference of the method
 	 */
-	public static Method getMethod(Object obj, String methodName) {
+	public static Method getMethodIfExists(Object obj, String methodName) {
 		if(methodName==null||methodName.isEmpty()) throw new OrmException("The method name is empty!");
 		Method[] allOfMethods = obj.getClass().getDeclaredMethods();
 		Method rtn = null;
@@ -199,6 +200,17 @@ public class BeanUtils {
 			if(method.getName().equals(methodName)) 
 				if(rtn==null||(rtn.getParameterTypes().length>0&&rtn.getParameterTypes()[0].isAssignableFrom(method.getParameterTypes()[0]))) rtn = method;
 		}
+		return rtn; //if have override, return the last one.
+	}
+	
+	/**
+	 * get the method of the service by name, using reflect.
+	 * @param service
+	 * @param methodName the name of the method
+	 * @return the reference of the method
+	 */
+	public static Method getMethod(Object obj, String methodName) {
+		Method rtn = getMethodIfExists(obj, methodName);
 		if(rtn!=null) return rtn; //if have override, return the last one.
 		throw new OrmException("No such method["+methodName+"] in the Object["+obj.getClass().getName()+"]");
 	}

@@ -88,7 +88,7 @@ public class EntityUtils {
 	 * @param json the map of values
 	 * @return the entity with values
 	 */
-	public static <T extends Entity<S>, S extends Serializable> T createEntity(Class<T> clazz, Map<String, String> json) {
+	public static <T extends Entity<S>, S extends Serializable> T createEntity(Class<T> clazz, Map<String, Object> json) {
 		if(clazz==null) throw new OrmException("please give the class of the entity");
 		T entity = createEntity(clazz);
 		if(json!=null&&!json.isEmpty())
@@ -104,14 +104,15 @@ public class EntityUtils {
 	public static <S extends Serializable> void setValueToEntity(Entity<S> entity, String fieldName, Object value) {
 		String firstStr = fieldName.substring(0,1);
 		String setMethodName = "set"+firstStr.toUpperCase()+fieldName.substring(1);
-		Method method = BeanUtils.getMethod(entity, setMethodName);
+		Method method = BeanUtils.getMethodIfExists(entity, setMethodName);
+		if(method==null) return;
 		Type[] allOfParameterTypes = method.getGenericParameterTypes();
 		Type firstOfParameterType = allOfParameterTypes[0];
 		Object obj = BeanUtils.bind(firstOfParameterType, value);
 		try {
 			method.invoke(entity, obj);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new OrmException("error when invoke the method of an entity: "+setMethodName, e);
+			//throw new OrmException("error when invoke the method of an entity: "+setMethodName, e);
 		} 
 	}
 	/**
@@ -138,8 +139,9 @@ public class EntityUtils {
 	 * @return the entity object
 	 */
 	public static <T extends Entity<S>, S extends Serializable> T bindEntity(Class<T> type, String json) {
-		Class<Map<String, String>> clazz = null;
-		Map<String, String> jsonMap = JSONObject.parseObject(json, clazz);
+		Class<Map<String, Object>> clazz = null;
+		json = json.replace("=", ":");
+		Map<String, Object> jsonMap = JSONObject.parseObject(json, clazz);
 		return EntityUtils.createEntity(type, jsonMap);
 	}
 	
@@ -151,11 +153,11 @@ public class EntityUtils {
 	 * @return the collection of the entities
 	 */
 	public static <T extends Entity<S>, S extends Serializable> 
-					Collection<T> bindListOrSetOfEntity(Class<T> type, String json) {
-		Class<List<Map<String, String>>> clazz = null;
-		List<Map<String, String>> jsonList = JSONObject.parseObject(json, clazz);
+					Collection<T> bindListOrSetOfEntity(Class<T> type, Object value) {
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> listOfMap = (List<Map<String, Object>>) value;
 		List<T> list = new ArrayList<>();
-		for(Map<String, String> map : jsonList) list.add(createEntity(type, map));
+		for(Map<String, Object> map : listOfMap) list.add(createEntity(type, map));
 		return list;
 	}
 }

@@ -7,18 +7,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,16 +45,9 @@ public class OrmController {
 	 */
 	@RequestMapping(value="orm/{bean}/{method}", method= {RequestMethod.GET, RequestMethod.POST})
 	public Object execute(@PathVariable("bean")String beanName, @PathVariable("method")String methodName, 
-			HttpServletRequest request) {
+			@RequestBody(required=false) Map<String, Object> json) {
 		Object service = getBean(beanName);
 		Method method = getMethod(service, methodName);
-		
-		Map<String, String> json = new HashMap<String, String>();
-		for (Enumeration<String> e = request.getParameterNames(); e.hasMoreElements();) {
-			String key = e.nextElement();
-			String value = request.getParameter(key);
-			json.put(key, value);
-		}
 		Object vo = getValueObj(method, json);
 		Object[] args = getArguments(method, json, vo);
 		return invoke(service, method, args);
@@ -105,7 +95,7 @@ public class OrmController {
 	 * @return the value object with it's data.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Object getValueObj(Method method, Map<String, String> json) {
+	private Object getValueObj(Method method, Map<String, Object> json) {
 		if(json==null||json.isEmpty()) return null;
 		Class<?>[] allOfParameterTypes = method.getParameterTypes();
 		if(allOfParameterTypes.length==0) return null;
@@ -124,7 +114,7 @@ public class OrmController {
 	 * @param vo
 	 * @return the arguments
 	 */
-	private Object[] getArguments(Method method, Map<String, String> json, Object vo) {
+	private Object[] getArguments(Method method, Map<String, Object> json, Object vo) {
 		int length = method.getParameterCount();
 		if(length==0) return null;
 		int index = 0;

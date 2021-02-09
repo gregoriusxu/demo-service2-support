@@ -34,14 +34,14 @@ public class EntityUtilsTest {
 
 	@Test
 	public void testCreateEntityWithNull() {
-		Map<String, String> json = null;
+		Map<String, Object> json = null;
 		Product actual = EntityUtils.createEntity(Product.class, json);
 		assertNotNull(actual);
 	}
 	
 	@Test
 	public void testCreateEntityWithValues() {
-		Map<String, String> json = new HashMap<>();
+		Map<String, Object> json = new HashMap<>();
 		json.put("id", "40001");
 		json.put("name", "computor");
 		json.put("supplierId", "20001");

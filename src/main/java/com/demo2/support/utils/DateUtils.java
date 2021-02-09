@@ -52,6 +52,16 @@ public class DateUtils {
 			throw new RuntimeException(e);
 		}
 	}
+
+	/**
+	 * @param string
+	 * @return 将UTC日期时间字符串转换为日期时间
+	 */
+	public static Date getDateForUTC(String string) {
+		string = string.replace("Z", " UTC");
+		String format = "yyyy-MM-dd'T'HH:mm:ss.SSS Z";
+		return DateUtils.getDate(string, format);
+	}
 	
 	/**
 	 * @param string
