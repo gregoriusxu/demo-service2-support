@@ -7,8 +7,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -45,9 +49,17 @@ public class OrmController {
 	 */
 	@RequestMapping(value="orm/{bean}/{method}", method= {RequestMethod.GET, RequestMethod.POST})
 	public Object execute(@PathVariable("bean")String beanName, @PathVariable("method")String methodName, 
-			@RequestBody(required=false) Map<String, Object> json) {
+			@RequestBody(required=false) Map<String, Object> json, HttpServletRequest request) {
 		Object service = getBean(beanName);
 		Method method = getMethod(service, methodName);
+		
+		if(json==null) json = new HashMap<>();
+		for (Enumeration<String> e = request.getParameterNames(); e.hasMoreElements();) {
+			String key = e.nextElement();
+			String value = request.getParameter(key);
+			json.put(key, value);
+		}
+		
 		Object vo = getValueObj(method, json);
 		Object[] args = getArguments(method, json, vo);
 		return invoke(service, method, args);
