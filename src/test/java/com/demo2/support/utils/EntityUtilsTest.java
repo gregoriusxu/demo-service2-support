@@ -111,19 +111,49 @@ public class EntityUtilsTest {
 				DateUtils.getDate("2020-01-01", "yyyy-MM-dd")));
 		excepted.setProducts(products);
 		
-		String productsStr = 
-				"[{id:40001,name:'cup',supplierId:20001,createDate:'2020-01-01',updateDate:'2020-01-01'},"
-				+ "{id:40002,name:'glass',supplierId:20002,createDate:'2020-01-01',updateDate:'2020-01-01'}]";
-		EntityUtils.setValueToEntity(actual, "products", productsStr);
+		Map<String, Object> map1 = new HashMap<>();
+		map1.put("id", 40001);
+		map1.put("name", "cup");
+		map1.put("supplierId", 20001);
+		map1.put("createDate", "2020-01-01");
+		map1.put("updateDate", "2020-01-01");
+		
+		Map<String, Object> map2 = new HashMap<>();
+		map2.put("id", 40002);
+		map2.put("name", "glass");
+		map2.put("supplierId", 20002);
+		map2.put("createDate", "2020-01-01");
+		map2.put("updateDate", "2020-01-01");
+		
+		List<Map<String, Object>> list = new ArrayList<>();
+		list.add(map1);
+		list.add(map2);
+		
+		EntityUtils.setValueToEntity(actual, "products", list);
 		assertThat(actual, equalTo(excepted));
 	}
 	
 	@Test
 	public void testBindListOfEntity() {
-		String productsStr = 
-				"[{id:40001,name:'cup',supplierId:20001,createDate:'2020-01-01',updateDate:'2020-01-01'},"
-				+ "{id:40002,name:'glass',supplierId:20002,createDate:'2020-01-01',updateDate:'2020-01-01'}]";
-		Collection<Product> actual = EntityUtils.bindListOrSetOfEntity(Product.class, productsStr);
+		Map<String, Object> map1 = new HashMap<>();
+		map1.put("id", 40001);
+		map1.put("name", "cup");
+		map1.put("supplierId", 20001);
+		map1.put("createDate", "2020-01-01");
+		map1.put("updateDate", "2020-01-01");
+		
+		Map<String, Object> map2 = new HashMap<>();
+		map2.put("id", 40002);
+		map2.put("name", "glass");
+		map2.put("supplierId", 20002);
+		map2.put("createDate", "2020-01-01");
+		map2.put("updateDate", "2020-01-01");
+		
+		List<Map<String, Object>> list = new ArrayList<>();
+		list.add(map1);
+		list.add(map2);
+		
+		Collection<Product> actual = EntityUtils.bindListOrSetOfEntity(Product.class, list);
 		
 		List<Product> excepted = new ArrayList<>();
 		excepted.add(new Product(new Long(40001), "cup", new Long(20001), 
