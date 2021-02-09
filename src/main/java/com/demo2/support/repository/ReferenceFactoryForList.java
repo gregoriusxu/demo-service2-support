@@ -71,7 +71,7 @@ public class ReferenceFactoryForList <S extends Serializable, T extends Entity<S
 		Method method = getMethod(service, methodName);
 		Collection<Entity<S>> listOfEntitiesNeedRef;
 		try {
-			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, ids);
+			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, convertListToString(ids));
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new OrmException("error when invoking the service by reflect", e);
 		}
@@ -104,7 +104,7 @@ public class ReferenceFactoryForList <S extends Serializable, T extends Entity<S
 		Method method = getMethod(service, methodName);
 		Collection<Entity<S>> listOfEntitiesNeedRef;
 		try {
-			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, ids);
+			listOfEntitiesNeedRef = (Collection<Entity<S>>)method.invoke(service, convertListToString(ids));
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new OrmException("error when invoking the service by reflect", e);
 		}
@@ -188,5 +188,15 @@ public class ReferenceFactoryForList <S extends Serializable, T extends Entity<S
 	private void setListOfRefToEntity(T entity, List<Object> list) {
 		String name = ref.getName();
 		BeanUtils.setValueByField(entity, name, list);
+	}
+	
+	/**
+	 * @param list
+	 * @return String
+	 */
+	private String convertListToString(List<?> list) {
+		String str = list.toString();
+		str = str.substring(1, str.length()-1);
+		return str.replace(" ", "");
 	}
 }
