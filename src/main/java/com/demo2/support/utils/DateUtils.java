@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * The utility of the date.
@@ -14,6 +15,7 @@ import java.util.Date;
  */
 public class DateUtils {
 	private static String dateFormat = "yyyy-MM-dd HH:mm:ss";
+	private static Locale defaultLocale = Locale.SIMPLIFIED_CHINESE;
 	/**
 	 * @param date
 	 * @return 将Date转换为Calendar
@@ -42,15 +44,25 @@ public class DateUtils {
 	/**
 	 * @param string
 	 * @param format
+	 * @param locale
 	 * @return 将日期时间字符串按照某种格式转换为日期时间
 	 */
-	public static Date getDate(String string, String format) {
-		SimpleDateFormat sdf = new SimpleDateFormat(format);
+	public static Date getDate(String string, String format, Locale locale) {
+		SimpleDateFormat sdf = new SimpleDateFormat(format, locale);
 		try {
 			return sdf.parse(string);
 		} catch (ParseException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * @param string
+	 * @param format
+	 * @return 将日期时间字符串按照某种格式转换为日期时间
+	 */
+	public static Date getDate(String string, String format) {
+		return getDate(string, format, defaultLocale);
 	}
 
 	/**
