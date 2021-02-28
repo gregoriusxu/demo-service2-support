@@ -20,6 +20,7 @@ import com.demo2.support.exception.DaoException;
 
 /**
  * The implement of BasicDao with Jdbc.
+ * 
  * @author fangang
  */
 public class BasicDaoJdbcImpl implements BasicDao {
@@ -28,7 +29,8 @@ public class BasicDaoJdbcImpl implements BasicDao {
 
 	@Override
 	public <T> void insert(T entity) {
-		if(entity==null) throw new DaoException("The entity is null");
+		if (entity == null)
+			throw new DaoException("The entity is null");
 		DaoHelper helper = EntityHelper.readDataFromEntity(entity);
 		try {
 			dao.insert(helper.getTableName(), helper.getColumns(), helper.getValues());
@@ -39,7 +41,8 @@ public class BasicDaoJdbcImpl implements BasicDao {
 
 	@Override
 	public <T> void update(T entity) {
-		if(entity==null) throw new DaoException("The entity is null");
+		if (entity == null)
+			throw new DaoException("The entity is null");
 		DaoHelper helper = EntityHelper.readDataFromEntity(entity);
 		try {
 			dao.update(helper.getTableName(), helper.getColMap(), helper.getPkMap());
@@ -50,20 +53,23 @@ public class BasicDaoJdbcImpl implements BasicDao {
 
 	@Override
 	public <T> void insertOrUpdate(T entity) {
-		if(entity==null) throw new DaoException("The entity is null");
+		if (entity == null)
+			throw new DaoException("The entity is null");
 		DaoHelper helper = EntityHelper.readDataFromEntity(entity);
 		try {
 			dao.insert(helper.getTableName(), helper.getColumns(), helper.getValues());
 		} catch (DataAccessException e) {
-			if(e.getCause() instanceof SQLIntegrityConstraintViolationException)
+			if (e.getCause() instanceof SQLIntegrityConstraintViolationException)
 				update(entity);
-			else throw new DaoException("error when insert entity", e);
+			else
+				throw new DaoException("error when insert entity", e);
 		}
 	}
 
 	@Override
 	public <T, S extends Collection<T>> void insertOrUpdateForList(S list) {
-		for(Object entity : list) insertOrUpdate(entity);
+		for (Object entity : list)
+			insertOrUpdate(entity);
 	}
 
 	@Override
@@ -74,7 +80,8 @@ public class BasicDaoJdbcImpl implements BasicDao {
 
 	@Override
 	public <T, S extends Collection<T>> void deleteForList(S list) {
-		for(Object entity : list) delete(entity);
+		for (Object entity : list)
+			delete(entity);
 	}
 
 	@Override
@@ -82,53 +89,56 @@ public class BasicDaoJdbcImpl implements BasicDao {
 		DaoHelper helper = EntityHelper.prepareForList(ids, template);
 		dao.deleteForList(helper.getTableName(), helper.getPkMap());
 	}
-	
+
 	@Override
 	public <S extends Serializable, T extends Entity<S>> T load(S id, T template) {
-		if(id==null||template==null) throw new DaoException("illegal parameters!");
+		if (id == null || template == null)
+			throw new DaoException("illegal parameters!");
 		template.setId(id);
 		DaoHelper helper = EntityHelper.readDataFromEntity(template);
 		List<Map<String, Object>> list = dao.find(helper.getTableName(), helper.getPkMap());
-		if(list.isEmpty()) return null;
+		if (list.isEmpty())
+			return null;
 		Map<String, Object> map = list.get(0);
 		return EntityHelper.convertMapToEntity(map, template);
 	}
-	
+
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(Collection<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> List<Entity<?>> loadForList(Collection<S> ids, T template) {
 		DaoHelper helper = EntityHelper.prepareForList(ids, template);
-		
+
 		List<Map<String, Object>> list = dao.load(helper.getTableName(), helper.getPkMap());
-		
-		//convert result set from List<Map> to List<Entity>
-		List<T> listOfEntity = new ArrayList<T>();
-		for(Map<String, Object> map : list) {
+
+		// convert result set from List<Map> to List<Entity>
+		List<Entity<?>> listOfEntity = new ArrayList<>();
+		for (Map<String, Object> map : list) {
 			@SuppressWarnings("unchecked")
-			T temp = (T)template.clone();
+			T temp = (T) template.clone();
 			T entity = EntityHelper.convertMapToEntity(map, temp);
 			listOfEntity.add(entity);
 		}
 		return listOfEntity;
 	}
-	
+
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> loadAll(T template) {
+	public <S extends Serializable, T extends Entity<S>> List<Entity<?>> loadAll(T template) {
 		DaoHelper helper = EntityHelper.readDataFromEntity(template);
 		List<Map<String, Object>> list = dao.find(helper.getTableName(), helper.getColMap());
-		
-		List<T> listOfEntity = new ArrayList<>();
-		for(Map<String, Object> map : list) {
+
+		List<Entity<?>> listOfEntity = new ArrayList<>();
+		for (Map<String, Object> map : list) {
 			@SuppressWarnings("unchecked")
-			T temp = (T)template.clone();
+			T temp = (T) template.clone();
 			T entity = EntityHelper.convertMapToEntity(map, temp);
 			listOfEntity.add(entity);
 		}
 		return listOfEntity;
 	}
-	
+
 	@Override
 	public <S extends Serializable, T extends Entity<S>> void delete(S id, T template) {
-		if(id==null||template==null) throw new DaoException("illegal parameters!");
+		if (id == null || template == null)
+			throw new DaoException("illegal parameters!");
 		T entity = this.load(id, template);
 		this.delete(entity);
 	}

@@ -28,7 +28,6 @@ public abstract class DecoratorDao implements BasicDao {
 		this.dao = dao;
 	}
 
-
 	@Override
 	public <T> void insert(T entity) {
 		getDao().insert(entity);
@@ -70,12 +69,12 @@ public abstract class DecoratorDao implements BasicDao {
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> loadForList(Collection<S> ids, T template) {
+	public <S extends Serializable, T extends Entity<S>> List<Entity<?>> loadForList(Collection<S> ids, T template) {
 		return getDao().loadForList(ids, template);
 	}
 
 	@Override
-	public <S extends Serializable, T extends Entity<S>> List<T> loadAll(T template) {
+	public <S extends Serializable, T extends Entity<S>> List<Entity<?>> loadAll(T template) {
 		return getDao().loadAll(template);
 	}
 
